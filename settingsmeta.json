@@ -1,0 +1,31 @@
+{
+  "identifier": "MosquitoSpeak",
+  "name": "Mosquito Speak",
+  "skillMetadata": {
+      "sections": [
+          {
+              "name": "Mqtt",
+              "fields": [
+                  {
+                     "name": "host",
+                     "type": "text",
+                     "label": "Mqtt host name",
+                     "value": ""
+                  },
+                  {
+                     "name": "port",
+                     "type": "number",
+                     "label": "Mqtt port number",
+                     "value": "1883"
+                  },
+                  {
+                     "name": "topic",
+                     "type": "text",
+                     "label": "Mqtt topic",
+                     "value": ""
+                  }
+              ]
+          }
+      ]
+  }
+}
