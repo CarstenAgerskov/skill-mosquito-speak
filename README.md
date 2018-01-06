@@ -1,5 +1,5 @@
 ## Mosquito Speak
-Make Mycroft speak text received on a mqtt bus. Allows Mycroft to notify you on events.
+Allow Mycroft to notify you on events, by speaking text received on a mqtt bus. 
 
 ## Description
 Instead of triggering a skill by asking Mycroft a question, this skill triggers when a text message is received on mqtt.
