@@ -26,6 +26,7 @@ from multiprocessing import Manager
 from ctypes import c_char_p
 import uuid
 import time
+import re
 
 __author__ = 'cagerskov'
 
@@ -40,6 +41,9 @@ class MosquitoSpeak(MycroftSkill):
         self.topic = None
         self.uuid = None
         self.last_message = None
+        self.splitRegex = None
+        self.retainFirst = None
+        self.retainLast = None
 
     def initialize(self):
         self.load_data_files(dirname(__file__))
@@ -49,6 +53,9 @@ class MosquitoSpeak(MycroftSkill):
         self.host = self.settings.get("host")
         self.port = self.settings.get("port")
         self.topic = self.settings.get("topic")
+        self.splitRegex = self.settings.get("splitRegex")
+        self.retainFirst = self.settings.get("retainFirst")
+        self.retainLast = self.settings.get("retainLast")
         manager = Manager()
         self.uuid = manager.Value(c_char_p, str(uuid.uuid1()))
         self.last_message = manager.Value(c_char_p, "There is no last message")
@@ -71,11 +78,13 @@ class MosquitoSpeak(MycroftSkill):
         if m.startswith("_starting") and not m.endswith(self.uuid.value):
             client.loop_stop()
             client.disconnect()
-#            self.speak("Mosquito speak disconnected")
             return
         if m.startswith("_starting"):
-#            self.speak("Mosquito speak connected")
             return
+        if self.splitRegex:
+            m = re.sub(self.splitRegex, lambda x: x.group(0)[0:int(self.retainFirst)] +
+                                                  ' ' + x.group(0)[int(self.retainLast):], m)
+
         self.speak(m)
         self.last_message.value = m
 

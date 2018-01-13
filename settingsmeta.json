@@ -25,6 +25,29 @@
                      "value": ""
                   }
               ]
+          },
+          {
+              "name": "Split text",
+              "fields": [
+                  {
+                     "name": "splitRegex",
+                     "type": "text",
+                     "label": "Split text at pattern (optional)",
+                     "value": ""
+                  },
+                  {
+                     "name": "retainFirst",
+                     "type": "number",
+                     "label": "Retain characters in matched string until index",
+                     "value": "0"
+                  },
+                  {
+                     "name": "retainLast",
+                     "type": "number",
+                     "label": "Retain characters in matched string from index",
+                     "value": "0"
+                  }
+              ]
           }
       ]
   }
