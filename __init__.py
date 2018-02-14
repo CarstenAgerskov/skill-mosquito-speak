@@ -27,6 +27,7 @@ from ctypes import c_char_p
 import uuid
 import time
 import re
+from mycroft.api import DeviceApi
 
 __author__ = 'cagerskov'
 
