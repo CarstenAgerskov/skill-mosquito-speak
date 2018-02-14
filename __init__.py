@@ -31,7 +31,7 @@ from websocket import create_connection, WebSocketTimeoutException
 from mycroft.configuration import Configuration
 from mycroft.messagebus.message import Message
 from mycroft.util.log import LOG
-
+from mycroft.api import DeviceApi
 
 MOSQUITO_SPEAK_ID = "MOSQUITO_SPEAK_ID"
 
@@ -52,6 +52,12 @@ class MosquitoSpeak(MycroftSkill):
         self.retainFirst = None
         self.retainLast = None
 
+    @property
+    def device_name(self):
+        # assume the "name" of the device is the "room name"
+        device = DeviceApi().get()
+        return device['name'].replace(' ', '_')
+
     def initialize(self):
         self.load_data_files(dirname(__file__))
         self.__init_client()
@@ -69,14 +75,21 @@ class MosquitoSpeak(MycroftSkill):
         self.last_message = manager.Value(c_char_p, "There is no last message")
 
         if not os.environ.get(MOSQUITO_SPEAK_ID):
-            os.environ[MOSQUITO_SPEAK_ID] = str(uuid.uuid1());
+            os.environ[MOSQUITO_SPEAK_ID] = str(uuid.uuid1())
             LOG.info("Getting new uuid")
         else:
             LOG.info("Reusing uuid")
 
         self.my_id = os.environ.get(MOSQUITO_SPEAK_ID)
         LOG.info(str("UUID is " + self.my_id))
-        client = mqtt.Client()
+
+        try:
+            client = mqtt.Client(
+                'mycroft_' + self.device_name)  # use self.device_name from home.mycroft.ai to provide a unique device name
+            LOG.info("MQTT client named: mycroft_" + self.device_name)
+        except Exception:
+            client = mqtt.Client()
+            LOG.info("MQTT client auto named")
 
         client.connect(self.host, str(self.port), 120)
         client.on_connect = self.on_connect
@@ -86,7 +99,6 @@ class MosquitoSpeak(MycroftSkill):
         time.sleep(1)
         client.publish(self.topic, "_starting " + self.my_id + " " + self.uuid.value)
 
-
     def __init_client(self):
         config = Configuration.get().get("websocket")
 
@@ -95,7 +107,6 @@ class MosquitoSpeak(MycroftSkill):
 
         uri = 'ws://' + host + ':' + str(port) + '/core'
         self.ws = create_connection(uri)
-
 
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe(self.topic)
@@ -114,8 +125,8 @@ class MosquitoSpeak(MycroftSkill):
                 LOG.info("Starting new callback")
                 return
 
-            if m.startswith("_utterance") and len(m.split(" ",1)) > 1:
-                m = Message("recognizer_loop:utterance", {"lang": "en-us", "utterances": [m.split(" ",1)[1]]})
+            if m.startswith("_utterance") and len(m.split(" ", 1)) > 1:
+                m = Message("recognizer_loop:utterance", {"lang": "en-us", "utterances": [m.split(" ", 1)[1]]})
                 self.ws.send(m.serialize())
                 return
 
@@ -127,7 +138,6 @@ class MosquitoSpeak(MycroftSkill):
 
         except Exception as e:
             LOG.error("Error: {0}".format(e))
-
 
     @intent_file_handler('RepeatLastMessage.intent')
     def repeat_last_message_intent(self):
