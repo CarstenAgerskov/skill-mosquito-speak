@@ -60,7 +60,7 @@ class MosquitoSpeak(MycroftSkill):
         self.uuid = manager.Value(c_char_p, str(uuid.uuid1()))
         self.last_message = manager.Value(c_char_p, "There is no last message")
 
-        client = mqtt.Client()
+        client = mqtt.Client('mycroft_' + self.room_name)  # use self.room_name from home.mycroft.ai to provide a unique device name
 
         client.on_connect = self.on_connect
         client.on_message = self.on_message
@@ -95,6 +95,12 @@ class MosquitoSpeak(MycroftSkill):
     def stop(self):
         pass
 
+    # from steve-mycroft wink skill
+    @property	
+    def room_name(self):
+        # assume the "name" of the device is the "room name"
+        device = DeviceApi().get()
+        return device['description'].replace(' ', '_')
 
 def create_skill():
     return MosquitoSpeak()
