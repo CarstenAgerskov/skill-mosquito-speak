@@ -9,7 +9,7 @@ It can be used for notifications. For instance, a smart home server could publis
 It is possible to make Mycroft repeat the last text it received on mqtt.
 
 2) Send an utterance in text from mqtt, to activate other skills. For instance, if your
-home automation detect that a window is opened, send the text "remind me to close the window in 10 minutes" to
+home automation detect that a window is opened, send the text "_utterance remind me to close the window in 10 minutes" on mqtt to
 trigger the "reminder" skill.
 
 And a warning: Due to the way this skill is implemented, it may stop working in case of a live update, under certain circumstances. A workaround is restarting the skill (or restarting Mycroft).

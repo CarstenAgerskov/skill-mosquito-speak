@@ -81,8 +81,10 @@ class MosquitoSpeak(MycroftSkill):
         LOG.info(str("UUID is " + self.my_id))
 
         try:
+            # use self.device_name from home.mycroft.ai to provide a unique
+            # device name
             client = mqtt.Client(
-                'mycroft_' + self.device_name)  # use self.device_name from home.mycroft.ai to provide a unique device name
+                'mycroft_' + self.device_name)
             LOG.info("MQTT client named: mycroft_" + self.device_name)
         except Exception:
             client = mqtt.Client()
@@ -117,7 +119,7 @@ class MosquitoSpeak(MycroftSkill):
 
             if m.startswith("_utterance") and len(m.split(" ", 1)) > 1:
                 self.emitter.emit(
-#                    'recognizer_loop:utterance',
+                    #                    'recognizer_loop:utterance',
                     Message('recognizer_loop:utterance',
                             {"lang": "en-us",
                              "utterances": [m.split(" ", 1)[1]]}))
