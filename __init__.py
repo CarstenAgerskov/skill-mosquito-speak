@@ -27,8 +27,6 @@ import uuid
 import time
 import re
 import os
-from websocket import create_connection, WebSocketTimeoutException
-from mycroft.configuration import Configuration
 from mycroft.messagebus.message import Message
 from mycroft.util.log import LOG
 from mycroft.api import DeviceApi
@@ -60,10 +58,9 @@ class MosquitoSpeak(MycroftSkill):
 
     def initialize(self):
         self.load_data_files(dirname(__file__))
-        self.__init_client()
-        self.__init_mqtt()
+        self._init_mqtt()
 
-    def __init_mqtt(self):
+    def _init_mqtt(self):
         self.host = self.settings.get("host")
         self.port = self.settings.get("port")
         self.topic = self.settings.get("topic")
@@ -97,16 +94,8 @@ class MosquitoSpeak(MycroftSkill):
         client.loop_start()
 
         time.sleep(1)
-        client.publish(self.topic, "_starting " + self.my_id + " " + self.uuid.value)
-
-    def __init_client(self):
-        config = Configuration.get().get("websocket")
-
-        host = config.get('host')
-        port = config.get('port')
-
-        uri = 'ws://' + host + ':' + str(port) + '/core'
-        self.ws = create_connection(uri)
+        client.publish(self.topic, "_starting " + self.my_id + " " +
+                       self.uuid.value)
 
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe(self.topic)
@@ -117,7 +106,8 @@ class MosquitoSpeak(MycroftSkill):
             if m.startswith("_starting"):
                 p = m.split(" ")
 
-                if len(p) == 3 and p[1] == self.my_id and p[2] != self.uuid.value:
+                if len(p) == 3 and p[1] == self.my_id and \
+                        p[2] != self.uuid.value:
                     client.loop_stop()
                     client.disconnect()
                     LOG.info("Stopping old callback")
@@ -126,13 +116,18 @@ class MosquitoSpeak(MycroftSkill):
                 return
 
             if m.startswith("_utterance") and len(m.split(" ", 1)) > 1:
-                m = Message("recognizer_loop:utterance", {"lang": "en-us", "utterances": [m.split(" ", 1)[1]]})
-                self.ws.send(m.serialize())
+                self.emitter.emit(
+#                    'recognizer_loop:utterance',
+                    Message('recognizer_loop:utterance',
+                            {"lang": "en-us",
+                             "utterances": [m.split(" ", 1)[1]]}))
+
                 return
 
             if self.splitRegex:
-                m = re.sub(self.splitRegex, lambda x: x.group(0)[0:int(self.retainFirst)] +
-                                                      ' ' + x.group(0)[int(self.retainLast):], m)
+                m = re.sub(self.splitRegex, lambda x:
+                x.group(0)[0:int(self.retainFirst)] +
+                ' ' + x.group(0)[int(self.retainLast):], m)
             self.speak(m)
             self.last_message.value = m
 
