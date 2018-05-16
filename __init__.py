@@ -51,6 +51,7 @@ class MosquitoSpeak(MycroftSkill):
         self.splitRegex = None
         self.retainFirst = None
         self.retainLast = None
+        self.loop_succeeded = False
 
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe(self.topic)
@@ -90,15 +91,24 @@ class MosquitoSpeak(MycroftSkill):
         self.retainFirst = self.settings.get('retainFirst')
         self.retainLast = self.settings.get('retainLast')
         self.last_message = 'There is no last message'
+        self.loop_succeeded = False
 
-        client.connect_async(self.host, int(self.port), 60)
         client.on_connect = self.on_connect
         client.on_message = self.on_message
-        client.loop_start()
+        try:
+            LOG.info("Connecting to host " + self.host + " on port " + self.port)
+            client.connect_async(self.host, int(self.port), 60)
+            client.loop_start()
+            self.loop_succeeded = True
+        except Exception as e:
+            LOG.error('Error: {0}'.format(e))
 
     @intent_file_handler('RepeatLastMessage.intent')
     def repeat_last_message_intent(self):
         self.speak(self.last_message)
+
+        if not self.loop_succeeded:
+            self.speak_dialog('not_configured')
 
     def stop(self):
         pass
