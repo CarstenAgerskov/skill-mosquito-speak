@@ -82,17 +82,19 @@ or bugfixes.
 
 I maintain a numnber of branches, corresponding to the Mycroft version.
 
-The following commands installs the skill manually, replace branch "origin/18.2.6b" below
+The following commands installs the skill manually, replace branch "origin/18.8.1" below
 with the branch that best corresponds to the mycroft core version you are running:
 ```
 cd /opt/mycroft/skills/
 git clone https://github.com/CarstenAgerskov/skill-mosquito-speak.git carstena-mosquito-speak
 cd carstena-mosquito-speak/
-git checkout origin/18.2.6b
+git checkout origin/18.8.1
 ```
 
+Re-read the "Installation" section of the README.md after checkout,
+there may be some specifics for the branch you have chosen.
 
-Either install requirements on a Python 3 based Mycroft core
+For branch "origin/18.8.1", do the following:
 ```
 cd <your mycroft-core directory>
 # When using bash/zsh use source as shown below, otherwise consult the venv documentation
@@ -102,16 +104,6 @@ pip install -r requirements.txt
 
 ```
 
-
-Or install requirements on a Python 2 based Mycroft core
-```
-workon mycroft
-pip install -r requirements.txt
-```
-
-Branch 18.2.6b, is for python 3 based Mycroft cores.
-
-Branch master is for python 2 based Mycroft cores.
 
 ## Credits
 Carsten Agerskov (https://github.com/CarstenAgerskov)
