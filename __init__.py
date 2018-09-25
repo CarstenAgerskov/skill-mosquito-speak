@@ -85,7 +85,7 @@ class MosquitoSpeak(MycroftSkill):
 
     def initialize(self):
         self.host = self.settings.get('host')
-        self.port = self.settings.get('port')
+        self.port = int(self.settings.get('port'))
         self.topic = self.settings.get('topic')
         self.splitRegex = self.settings.get('splitRegex')
         self.retainFirst = self.settings.get('retainFirst')
@@ -96,8 +96,8 @@ class MosquitoSpeak(MycroftSkill):
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         try:
-            LOG.info("Connecting to host " + self.host + " on port " + self.port)
-            client.connect_async(self.host, int(self.port), 60)
+            LOG.info("Connecting to host " + self.host + " on port " + str(self.port))
+            client.connect_async(self.host, self.port, 60)
             client.loop_start()
             self.loop_succeeded = True
         except Exception as e:
