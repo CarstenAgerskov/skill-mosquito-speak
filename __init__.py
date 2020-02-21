@@ -46,20 +46,31 @@ class MosquitoSpeak(MycroftSkill):
         self.host = None
         self.port = None
         self.topic = None
+        self.alertTopic = None
         self.uuid = None
         self.last_message = None
         self.splitRegex = None
         self.retainFirst = None
         self.retainLast = None
         self.loop_succeeded = False
+        self.sleep_mode = False
 
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe(self.topic)
+        if self.alertTopic is not None:
+            client.subscribe(self.alertTopic)
         if rc == 0:
             LOG.info('Connected to ' + self.topic)
         else:
             LOG.error('Connection to ' + self.topic +
                       ' failed, error code ' + rc)
+        if self.alertTopic is not None:
+            client.subscribe(self.alertTopic)
+            if rc == 0:
+                LOG.info('Connected to ' + self.alertTopic)
+            else:
+                LOG.error('Connection to ' + self.alertTopic +
+                          'failed, error code ' + rc)
 
     def on_message(self, client, userdata, msg):
         try:
@@ -77,7 +88,11 @@ class MosquitoSpeak(MycroftSkill):
                 m = re.sub(self.splitRegex, lambda x:
                     x.group(0)[0:int(self.retainFirst)] +
                     ' ' + x.group(0)[int(self.retainLast):], m)
-            self.speak(m)
+
+            if self.sleep_mode and msg.topic != self.alertTopic:
+                LOG.info('Sleep Mode. Skipping voice output for message: ' + m)
+            else:
+                self.speak(m)
             self.last_message = m
 
         except Exception as e:
@@ -87,12 +102,17 @@ class MosquitoSpeak(MycroftSkill):
         self.host = self.settings.get('host')
         self.port = int(self.settings.get('port'))
         self.topic = self.settings.get('topic')
+        self.alertTopic = self.settings.get('alertTopic')
         self.splitRegex = self.settings.get('splitRegex')
         self.retainFirst = self.settings.get('retainFirst')
         self.retainLast = self.settings.get('retainLast')
         self.last_message = 'There is no last message'
         self.loop_succeeded = False
-
+        self.sleep_mode = False
+        # Register message bus events to stop notifications when sleeping.
+        self.add_event('recognizer_loop:sleep', self.handler_sleep)
+        self.add_event('mycroft.awoken', self.handler_wakeup)
+        
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         try:
@@ -113,6 +133,13 @@ class MosquitoSpeak(MycroftSkill):
     def stop(self):
         pass
 
+    def handler_sleep(self, message):
+        # code to excecute when recognizer_loop:sleep message detected...
+        self.sleep_mode = True
+
+    def handler_wakeup(self, message):
+        # wake up call from message bus.
+        self.sleep_mode = False
 
 def create_skill():
     return MosquitoSpeak()
