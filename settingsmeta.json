@@ -23,6 +23,12 @@
                      "type": "text",
                      "label": "Mqtt topic",
                      "value": ""
+                  },
+                  {
+                     "name": "alertTopic",
+                     "type": "text",
+                     "label": "Mqtt alert topic",
+                     "value": ""
                   }
               ]
           },
