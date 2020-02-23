@@ -17,13 +17,17 @@ trigger the "reminder" skill.
 The skill is configured on your "Mycroft Home" page. Configure the mqtt server, port and topic that the skill will listen for text messages on.
 Currently, password or certificates are not supported. (Maybe I will implement it if you promise to test it :)
 
+Two topics are available in the configuration: "Mqtt topic" and "Mqtt alert topic".  
+The "Mqtt alert topic" is a priority topic, that will always be active, even if mycroft is sleeping.  
+The "Mqtt topic" will be silent if mycroft is sleeping. You can put mycroft to sleep by using the command "Hey Mycroft, go to sleep".
+
 A restart of the skill is needed when changing the configuration.
 
 Optionally, it is possible to split the text, using a regular expression.
 
 Example CamelCase: If you send the string "KitchenWindow is open",
 you want to split KitchenWindow. After the split Mycroft will say "Kitchen Window is open". To do that set the parameters on "Mycroft Home" like this:
-* Split text at pattern (optional): [a-z][A-Z]
+* Split text at pattern (optional): `[a-z][A-Z]`
 * Retain characters in matched string until index: 1
 * Retain characters in matched string from index: 1
 
@@ -31,7 +35,7 @@ What happens: The regex match "nK" in "KitchenWindow is open". We retain the cha
 We retain the characters after index 1 of "nK", which is K. And we put a space in the middle.
 
 Example hypen: Convert "Outside-temperature is -5 degrees" to "Outside temperature is -5 degrees"
-* Split text at pattern (optional): [a-z|A-Z]-[a-z|A-Z]
+* Split text at pattern (optional): `[a-z|A-Z]-[a-z|A-Z]`
 * Retain characters in matched string until index: 1
 * Retain characters in matched string from index: 2
 
@@ -62,6 +66,8 @@ Example of
 After 10 minutes
 * Mycroft: "you have a reminder to close the window"
 
+Text prepended with "_utterance" will be executed even if mycroft is sleeping.
+
 ## Installation
 The best way to install mosquito speak is to use Mycroft. Say:
 
@@ -80,30 +86,22 @@ risking the consequences of the skill not passing the acceptance by the
 Mycroft team. And the skill will not auto update in case of new features
 or bugfixes.
 
-I maintain a numnber of branches, corresponding to the Mycroft version.
-
-The following commands installs the skill manually, replace branch "origin/18.8.1" below
-with the branch that best corresponds to the mycroft core version you are running:
-```
-cd /opt/mycroft/skills/
-git clone https://github.com/CarstenAgerskov/skill-mosquito-speak.git carstena-mosquito-speak
-cd carstena-mosquito-speak/
-git checkout origin/18.8.1
-```
-
-Re-read the "Installation" section of the README.md after checkout,
-there may be some specifics for the branch you have chosen.
-
-For branch "origin/18.8.1", do the following:
+The following commands installs the skill manually:
 ```
 cd <your mycroft-core directory>
 # When using bash/zsh use source as shown below, otherwise consult the venv documentation
 source .venv/bin/activate
-cd /opt/mycroft/skills/carstena-mosquito-speak/
+
+cd /opt/mycroft/skills/
+git clone https://github.com/CarstenAgerskov/skill-mosquito-speak.git carstena-mosquito-speak
+cd carstena-mosquito-speak/
+git checkout origin/master
 pip install -r requirements.txt
 
 ```
 
 
 ## Credits
-Carsten Agerskov (https://github.com/CarstenAgerskov)
+[Carsten Agerskov](https://github.com/CarstenAgerskov)
+
+Alert topic thanks to [tobus3000](https://github.com/tobus3000)
