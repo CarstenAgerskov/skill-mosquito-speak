@@ -22,6 +22,8 @@ from __future__ import division
 from __future__ import absolute_import
 from mycroft import intent_file_handler
 from mycroft.skills.core import MycroftSkill
+from mycroft.audio import wait_while_speaking
+from time import sleep
 import paho.mqtt.client as mqtt
 import re
 from mycroft.messagebus.message import Message
@@ -55,6 +57,13 @@ class MosquitoSpeak(MycroftSkill):
         self.loop_succeeded = False
         self.sleep_mode = False
 
+    @property
+    def platform(self):
+        if self.config_core and self.config_core.get("enclosure"):
+            return self.config_core["enclosure"].get("platform")
+        else:
+            return None
+
     def on_connect(self, client, userdata, flags, rc):
         client.subscribe(self.topic)
         if self.alertTopic is not None:
@@ -77,7 +86,7 @@ class MosquitoSpeak(MycroftSkill):
             m = msg.payload.decode('utf-8')
 
             if m.startswith('_utterance') and len(m.split(' ', 1)) > 1:
-                self.emitter.emit(
+                self.bus.emit(
                     Message('recognizer_loop:utterance',
                             {'lang': 'en-us',
                              'utterances': [m.split(' ', 1)[1]]}))
@@ -93,6 +102,13 @@ class MosquitoSpeak(MycroftSkill):
                 LOG.info('Sleep Mode. Skipping voice output for message: ' + m)
             else:
                 self.speak(m)
+                if self.platform == "mycroft_mark_1":
+                    self.enclosure.deactivate_mouth_events()
+                    self.enclosure.mouth_text(m)
+                    sleep(5)
+                    wait_while_speaking()
+                    self.enclosure.mouth_reset()
+                    self.enclosure.activate_mouth_events()
             self.last_message = m
 
         except Exception as e:
@@ -116,7 +132,8 @@ class MosquitoSpeak(MycroftSkill):
 
             client.on_connect = self.on_connect
             client.on_message = self.on_message
-            LOG.info("Connecting to host " + self.host + " on port " + str(self.port))
+            LOG.info("Connecting to host " + self.host
+                     + " on port " + str(self.port))
             client.connect_async(self.host, self.port, 60)
             client.loop_start()
             self.loop_succeeded = True
@@ -140,6 +157,7 @@ class MosquitoSpeak(MycroftSkill):
     def handler_wakeup(self, message):
         # wake up call from message bus.
         self.sleep_mode = False
+
 
 def create_skill():
     return MosquitoSpeak()
